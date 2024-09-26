@@ -1,13 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Our simple HTTP server</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
-  
-  <script>
 
+  <script>
+    const handleResponse = async (response) =>
+    {
+      const content = document.querySelector('#content');
+
+      // Displays the appropriate message based on the status code of the response
+      switch (response.status)
+      {
+        case 200: // Success
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 201: // Created
+          content.innerHTML = '<b>Created</b>';
+          break;
+        case 204: // Updated
+          content.innerHTML = '<b>Updated (No Content)</b>';
+          return;
+        case 400: // Bad Request
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 404: // Not Found
+          content.innerHTML = `<b>Not Found</b>`;
+          break;
+        default: // Anything else
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+
+      // Parse the response to JSON
+      const obj = await response.json();
+
+      // Display the message from the response body, if there is one
+      if (obj.message)
+      {
+        content.innerHTML += `<p>${obj.message}</p>`;
+      } else
+      {
+        content.innerHTML += `<p>Meta data received</p>`;
+      }
+    };
+
+    // Sends a post request
+    const sendPost = async (nameForm) =>
+    {
+      //Grab all the info from the form
+      const url = nameForm.getAttribute('action');
+      const method = nameForm.getAttribute('method');
+
+      const nameField = nameForm.querySelector('#nameField');
+      const ageField = nameForm.querySelector('#ageField');
+
+      // Build a data string in the FORM-URLENCODED format.
+      const formData = `name=${nameField.value}&age=${ageField.value}`;
+
+      let response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response);
+    };
+
+    const init = () =>
+    {
+      const nameForm = document.querySelector('#nameForm');
+
+      const addUser = (e) =>
+      {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      }
+
+      nameForm.addEventListener('submit', addUser);
+    };
+
+    window.onload = init;
   </script>
 </head>
+
 <body>
   <section id="top">
     <h3>POST Status Code Tests</h3>
@@ -15,13 +96,13 @@
       <label for="name">Name: </label>
       <input id="nameField" type="text" name="name" />
       <label for="age">Age: </label>
-      <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
+      <input id="ageField" type="number" name="age" min="0" max="100" step="1" />
       <input type="submit" value="Add User" />
     </form>
     <form id="userForm" action="/getUsers" method="get">
-      <select id='urlField'>
-        <option value='/getUsers'>/getUsers</option>
-        <option value='/notReal'>/notReal</option>
+      <select id="urlField">
+        <option value="/getUser">/getUsers</option>
+        <option value="/notReal">/notReal</option>
       </select>
       <select id="methodSelect">
         <option value="get">GET</option>
@@ -33,4 +114,5 @@
   <section id="content">
   </section>
 </body>
+
 </html>
