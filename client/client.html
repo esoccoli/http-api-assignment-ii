@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
 
   <script>
-    const handleResponse = async (response) =>
+    const handleResponse = async (response, parseResponse) =>
     {
       const content = document.querySelector('#content');
 
@@ -33,19 +33,34 @@
           break;
       }
 
-      // Parse the response to JSON
-      const obj = await response.json();
+      if (parseResponse)
+      {
+        let obj = await response.json();
 
-      // Display the message from the response body, if there is one
-      if (obj.message)
-      {
-        content.innerHTML += `<p>${obj.message}</p>`;
-      } else
-      {
-        content.innerHTML += `<p>Meta data received</p>`;
+        let jsonString = JSON.stringify(obj);
+        content.innerHTML += `<p>${jsonString}</p>`;
       }
+      else
+      {
+        content.innerHTML += '<p>Metadata Received</p>';
+      }
+
     };
 
+    const sendRequest = async (userForm) =>
+    {
+      const url = userForm.querySelector('#urlField').value;
+      const method = userForm.querySelector('#methodSelect').value;
+
+      let response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      handleResponse(response, method === 'get');
+    }
     // Sends a post request
     const sendPost = async (nameForm) =>
     {
@@ -68,7 +83,7 @@
         body: formData,
       });
 
-      handleResponse(response);
+      handleResponse(response, response.status !== 204);
     };
 
     const init = () =>
@@ -82,7 +97,14 @@
         return false;
       }
 
+      const getUsers = (e) =>
+      {
+        e.preventDefault();
+        sendRequest(userForm);
+        return false;
+      }
       nameForm.addEventListener('submit', addUser);
+      userForm.addEventListener('submit', getUsers);
     };
 
     window.onload = init;
@@ -101,7 +123,7 @@
     </form>
     <form id="userForm" action="/getUsers" method="get">
       <select id="urlField">
-        <option value="/getUser">/getUsers</option>
+        <option value="/getUsers">/getUsers</option>
         <option value="/notReal">/notReal</option>
       </select>
       <select id="methodSelect">

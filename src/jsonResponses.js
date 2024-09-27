@@ -8,11 +8,7 @@ const respondJSON = (request, response, status, object) => {
     'Content-Length': Buffer.byteLength(content, 'utf8'),
   });
 
-  // Only send the response body if the request was not a HEAD request
-  if (request.method !== 'HEAD') {
-    response.write(content);
-  }
-
+  response.write(content);
   response.end();
 };
 
